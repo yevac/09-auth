@@ -1,93 +1,79 @@
 "use client";
 
+import { useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useDebounceValue } from "usehooks-ts";
+
 import css from "./NotesPage.module.css";
 
-import { useState } from "react";
-import { useDebounce } from "use-debounce";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import type { FetchNotesResponse } from "@/types/note";
 import { getNotes } from "@/lib/api/clientApi";
-
-import SearchBox from "@/components/SearchBox/SearchBox";
 import NoteList from "@/components/NoteList/NoteList";
 import Pagination from "@/components/Pagination/Pagination";
-import Modal from "@/components/Modal/Modal";
-import NoteForm from "@/components/NoteForm/NoteForm";
-import type { NoteTag } from "@/types/note";
+import SearchBox from "@/components/SearchBox/SearchBox";
+import ErrorBox from "@/components/ErrorBox/ErrorBox";
+import Loader from "@/components/Loader/Loader";
+import Link from "next/link";
 
-interface NotesPageClientProps {
-  tag?: NoteTag;
+interface NotesPageProps {
+  initialPage: number;
+  initialSearch: string;
+  tag?: string;
 }
 
-const PER_PAGE = 12;
+export default function NotesPage({
+  initialPage,
+  initialSearch,
+  tag,
+}: NotesPageProps) {
+  const [page, setPage] = useState(initialPage);
+  const [search, setSearch] = useState(initialSearch);
+  const [debauncedSearch] = useDebounceValue(search, 1000);
 
-export default function NotesPageClient({ tag }: NotesPageClientProps) {
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const [debouncedSearch] = useDebounce(search, 500);
-
-  const { data, isLoading, isError } = useQuery({
-    queryKey: [
-      "notes",
-      { page, perPage: PER_PAGE, tag, search: debouncedSearch },
-    ],
-    queryFn: () =>
-      getNotes({
-        page,
-        perPage: PER_PAGE,
-        tag,
-        search: debouncedSearch,
-      }),
-    placeholderData: keepPreviousData,
-  });
+  const { data, isLoading, isError, error, isRefetching } =
+    useQuery<FetchNotesResponse>({
+      queryKey: ["notes", page, debauncedSearch, tag],
+      queryFn: () => getNotes(page, debauncedSearch, tag),
+      placeholderData: keepPreviousData,
+      staleTime: 60 * 1000,
+    });
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
     setPage(1);
   };
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
-
-  if (isError || !data) return <p>{isError}</p>;
-
   return (
-    <div className={css.app}>
-      {isLoading && <p>Loading...</p>}
-      <div className={css.toolbar}>
-        <SearchBox value={search} onSearch={handleSearchChange} />
+    <div>
+      <div className={css.app}>
+        <header className={css.toolbar}>
+          <SearchBox value={search} onSearch={handleSearchChange} />
 
-{data.totalPages > 1 && (
-        <Pagination
-          page={page}
-          totalPages={data.totalPages}
-          onPageChange={setPage}
-        />
-      )}
+          {data?.totalPages && data?.totalPages > 1 ? (
+            <Pagination
+              totalPages={data?.totalPages ?? 0}
+              page={page}
+              onPageChange={setPage}
+            />
+          ) : null}
 
-        <button type="button" className={css.button} onClick={openModal}>
-          Add note +
-        </button>
+          <div className={css.button}>
+            <Link href="/notes/action/create">Create note +</Link>
+          </div>
+        </header>
+        <div className={css.contentContainer}>
+          {isLoading && <Loader />}
+
+          {data && !isLoading && <NoteList notes={data.notes} />}
+
+          {isRefetching && !isLoading && <Loader />}
+
+          {!isError && !isLoading && !data?.notes?.length && !isLoading && (
+            <ErrorBox query={debauncedSearch} />
+          )}
+          {isError && <ErrorBox errorMessage={error.message} />}
+        </div>
       </div>
-      
-
-      {data.notes.length > 0 ? (
-        <NoteList notes={data.notes} />
-      ) : (
-        <p>No notes found.</p>
-      )}
-      {isModalOpen && (
-        <Modal closeModal={closeModal}>
-          <NoteForm
-            closeModal={closeModal}
-            onCreated={() => {
-              setPage(1);
-            }}
-          />
-        </Modal>
-      )}
     </div>
   );
 }
-
