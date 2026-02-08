@@ -28,15 +28,22 @@ export default function NotesPage({
 }: NotesPageProps) {
   const [page, setPage] = useState(initialPage);
   const [search, setSearch] = useState(initialSearch);
-  const [debauncedSearch] = useDebounceValue(search, 1000);
+  const [debouncedSearch] = useDebounceValue(search, 1000);
 
   const { data, isLoading, isError, error, isRefetching } =
     useQuery<FetchNotesResponse>({
-      queryKey: ["notes", page, debauncedSearch, tag],
-      queryFn: () => getNotes(page, debauncedSearch, tag),
-      placeholderData: keepPreviousData,
-      staleTime: 60 * 1000,
-    });
+  queryKey: ["notes", { page, search: debouncedSearch, tag }],
+  queryFn: () =>
+    getNotes({
+      page,
+      perPage: 12,
+      search: debouncedSearch,
+      tag,
+    }),
+  placeholderData: keepPreviousData,
+  staleTime: 60 * 1000,
+});
+
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -69,7 +76,7 @@ export default function NotesPage({
           {isRefetching && !isLoading && <Loader />}
 
           {!isError && !isLoading && !data?.notes?.length && !isLoading && (
-            <ErrorBox query={debauncedSearch} />
+            <ErrorBox query={debouncedSearch} />
           )}
           {isError && <ErrorBox errorMessage={error.message} />}
         </div>
