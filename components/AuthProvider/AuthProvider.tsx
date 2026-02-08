@@ -1,32 +1,41 @@
 "use client";
 
-import { checkSession, getMe } from "@/lib/api/clientApi";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+
+import { checkSession } from "@/lib/api/clientApi";
 import { useAuthStore } from "@/lib/store/authStore";
-import { useEffect } from "react";
 
-type Props = {
-  children: React.ReactNode;
-};
+const PRIVATE_PREFIXES = ["/notes", "/profile"];
 
-export default function AuthProvider({ children }: Props) {
-  const setUser = useAuthStore((state) => state.setUser);
-  const clearIsAuthenticated = useAuthStore(
-    (state) => state.clearIsAuthenticated,
-  );
+export default function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const setUser = useAuthStore((s) => s.setUser);
+  const clearIsAuthenticated = useAuthStore((s) => s.clearIsAuthenticated);
+
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const isAuthenticated = await checkSession();
-      if (isAuthenticated) {
-
-        const user = await getMe();
+    const init = async () => {
+      try {
+        const user = await checkSession();
         if (user) setUser(user);
-      } else {
+        else clearIsAuthenticated();
+      } catch {
         clearIsAuthenticated();
+        const isPrivate = PRIVATE_PREFIXES.some((p) => pathname.startsWith(p));
+        if (isPrivate) router.push("/sign-in");
+      } finally {
+        setLoading(false);
       }
     };
-    fetchUser();
-  }, [setUser, clearIsAuthenticated]);
 
-  return children;
+    init();
+  }, [pathname, router, setUser, clearIsAuthenticated]);
+
+  if (loading) return null;
+
+  return <>{children}</>;
 }
