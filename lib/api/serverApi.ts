@@ -4,7 +4,7 @@ import { User } from "@/types/user";
 import { Note, FetchNotesResponse } from "@/types/note";
 
 export const getServerMe = async (): Promise<User> => {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const { data } = await api.get("/users/me", {
     headers: {
       cookie: cookieStore.toString(),
