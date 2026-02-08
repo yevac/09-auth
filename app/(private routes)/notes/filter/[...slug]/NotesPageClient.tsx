@@ -6,7 +6,7 @@ import { useDebounceValue } from "usehooks-ts";
 
 import css from "./NotesPage.module.css";
 
-import type { FetchNotesResponse } from "@/types/note";
+import type { FetchNotesResponse, NoteTag } from "@/types/note";
 import { getNotes } from "@/lib/api/clientApi";
 import NoteList from "@/components/NoteList/NoteList";
 import Pagination from "@/components/Pagination/Pagination";
@@ -18,7 +18,7 @@ import Link from "next/link";
 interface NotesPageProps {
   initialPage: number;
   initialSearch: string;
-  tag?: string;
+  tag?: NoteTag;
 }
 
 export default function NotesPage({

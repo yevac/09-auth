@@ -7,7 +7,7 @@ export const getServerMe = async (): Promise<User> => {
   const cookieStore = await cookies();
   const { data } = await api.get("/users/me", {
     headers: {
-      Cookie: cookieStore.toString(),
+      cookie: cookieStore.toString(),
     },
   });
   return data;

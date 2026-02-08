@@ -1,31 +1,35 @@
 import { api } from "./api";
-import type { Note, CreateNoteParams, FetchNotesResponse } from "@/types/note";
+import type { Note, CreateNoteParams, NoteTag } from "@/types/note";
 import { LoginRequest, RegisterRequest, CheckSessionRequest, UpdateUserRequest, } from "@/types/auth";
 import { User } from "@/types/user";
 
-export async function fetchSingleNoteById(id: string) {
+export async function fetchNoteById(id: string) {
   const response = await api.get<Note>(`/notes/${id}`, {});
   return response.data;
 }
 
-export async function getNotes(
-  page?: number,
-  searchQuery?: string,
-  tag?: string,
-) {
-  const response = await api.get<FetchNotesResponse>("/notes", {
+export async function getNotes(params: {
+  page: number;
+  perPage: number;
+  search?: string;
+  tag?: NoteTag;
+}) {
+  const { page, perPage, search, tag } = params;
+
+  const response = await api.get<{
+    notes: Note[];
+    totalPages: number;
+  }>("/notes", {
     params: {
       page,
-      perPage: 12,
-      sortBy: "created",
-      search: searchQuery,
+      perPage,
+      search,
       tag,
     },
   });
 
   return response.data;
 }
-
 export async function createNote(payload: CreateNoteParams): Promise<Note> {
   const response = await api.post<Note>("/notes", payload);
   return response.data;
