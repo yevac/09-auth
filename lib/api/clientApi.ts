@@ -1,7 +1,7 @@
 import { api } from "./api";
 import type { Note, CreateNoteParams, NoteTag } from "@/types/note";
 import { LoginRequest, RegisterRequest, UpdateUserRequest, } from "@/types/auth";
-import { User } from "@/types/user";
+import type { User } from "@/types/user";
 
 export async function fetchNoteById(id: string) {
   const response = await api.get<Note>(`/notes/${id}`, {});
