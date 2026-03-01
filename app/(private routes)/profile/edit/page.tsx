@@ -38,7 +38,7 @@ export default function Edit() {
   };
 
   const handleCancel = () => {
-    router.push("/profile");
+    router.back();
   };
 
   return (
@@ -51,14 +51,20 @@ export default function Edit() {
           height={300}
           alt="Avatar"
         />
-        <p>
-          <span style={{ fontWeight: "bold" }}>Email: </span>
-          {email}
-        </p>
+
         <form action={handleSaveUser} className={css.form}>
           <input
+            type="email"
+            name="email"
+            value={email}
+            readOnly
+            className={css.input}
+          />
+
+          <input
             type="text"
-            name="username" required
+            name="username"
+            required
             value={username}
             onChange={handleChange}
             className={css.input}

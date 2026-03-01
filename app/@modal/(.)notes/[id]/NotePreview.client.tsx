@@ -26,7 +26,7 @@ export default function NotePreviewClient() {
 
   const formattedDate = note.updatedAt
     ? `Updated at: ${new Date(note.updatedAt).toLocaleDateString()}`
-    : `Created at: ${new Date(note.createdAt).toLocaleDateString()}}`;
+    : `Created at: ${new Date(note.createdAt).toLocaleDateString()}`;
 
   return (
     <Modal closeModal={handleClose}>

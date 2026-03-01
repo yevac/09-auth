@@ -1,6 +1,6 @@
-import type { Metadata } from 'next';
-import { dehydrate, HydrationBoundary, QueryClient, } from "@tanstack/react-query";
-import { fetchNoteById } from "@/lib/api/clientApi";
+import type { Metadata } from "next";
+import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
+import { fetchNoteByIdServer } from "@/lib/api/serverApi";
 import NoteDetailsClient from "./NoteDetails.client";
 
 type NoteDetailsPageProps = {
@@ -16,7 +16,7 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const tag = params.slug?.[0] ?? 'all';
+  const tag = params.slug?.[0] ?? "all";
 
   return {
     title: `Notes filter: ${tag}`,
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: `/notes/filter/${tag}`,
       images: [
         {
-          url: 'https://ac.goit.global/fullstack/react/notehub-og-meta.jpg',
+          url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
         },
       ],
     },
@@ -41,7 +41,7 @@ export default async function NoteDetailsPage({ params }: NoteDetailsPageProps) 
 
   await queryClient.prefetchQuery({
     queryKey: ["note", id],
-    queryFn: () => fetchNoteById(id),
+    queryFn: () => fetchNoteByIdServer(id),
   });
 
   return (
