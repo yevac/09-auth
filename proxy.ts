@@ -4,7 +4,7 @@ import { refreshSessionServer } from "./lib/api/serverApi";
 const privateRoutes = ["/profile", "/notes"];
 const publicRoutes = ["/sign-in", "/sign-up"];
 
-export default async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const accessToken = request.cookies.get("accessToken")?.value;
