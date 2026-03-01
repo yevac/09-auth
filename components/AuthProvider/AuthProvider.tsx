@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
-import { checkSession } from "@/lib/api/clientApi";
+import { checkSession, getMe } from "@/lib/api/clientApi";
 import { useAuthStore } from "@/lib/store/authStore";
 
 const PRIVATE_PREFIXES = ["/notes", "/profile"];
@@ -17,12 +17,17 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+   useEffect(() => {
     const init = async () => {
       try {
-        const user = await checkSession();
-        if (user !== null) setUser(user);
-        else clearIsAuthenticated();
+        const session = await checkSession();
+
+        if (session) {
+          const user = await getMe();
+          setUser(user);
+        } else {
+          clearIsAuthenticated();
+        }
       } catch {
         clearIsAuthenticated();
         const isPrivate = PRIVATE_PREFIXES.some((p) => pathname.startsWith(p));
