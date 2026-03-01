@@ -50,7 +50,7 @@ export default async function middleware(request: NextRequest) {
   }
 
   if (accessToken && isPublicRoute) {
-    return NextResponse.redirect(new URL("/profile", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();
