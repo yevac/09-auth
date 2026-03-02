@@ -32,7 +32,7 @@ export default function NotesPage({
 
   const { data, isLoading, isError, error, isRefetching } =
     useQuery<FetchNotesResponse>({
-  queryKey: ["notes", { page, search: debouncedSearch, tag }],
+  queryKey: ["notes", { page, perPage: 12, search: debouncedSearch, tag }],
   queryFn: () =>
     getNotes({
       page,
