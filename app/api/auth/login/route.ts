@@ -3,7 +3,7 @@ import { api } from '../../api';
 import { cookies } from 'next/headers';
 import { isAxiosError } from 'axios';
 import { logErrorResponse } from '../../_utils/utils';
-import { setAuthCookiesFromHeader } from '../../_utils/authCookies';
+import { setAuthCookiesFromHeader, setAuthCookiesFromPayload } from '../../_utils/authCookies';
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,7 +11,17 @@ export async function POST(req: NextRequest) {
     const apiRes = await api.post('auth/login', body);
 
     const cookieStore = await cookies();
-    setAuthCookiesFromHeader(cookieStore, apiRes.headers['set-cookie']);
+    const fromHeader = setAuthCookiesFromHeader(cookieStore, apiRes.headers['set-cookie']);
+    const fromPayload = setAuthCookiesFromPayload(cookieStore, apiRes.data);
+    const hasAccessToken = Boolean(cookieStore.get('accessToken')?.value);
+
+    if (!fromHeader && !fromPayload && !hasAccessToken) {
+      return NextResponse.json(
+        { error: 'Authentication succeeded but no tokens were provided by upstream API' },
+        { status: 502 }
+      );
+    }
+
     return NextResponse.json(apiRes.data, { status: apiRes.status });
   } catch (error) {
     if (isAxiosError(error)) {

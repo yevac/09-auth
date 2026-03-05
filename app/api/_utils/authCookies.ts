@@ -106,3 +106,54 @@ export function setAuthCookiesFromHeader(
 
   return setAnyCookie;
 }
+
+function readTokenValue(
+  payload: unknown,
+  tokenKey: "accessToken" | "refreshToken"
+): string | undefined {
+  if (!payload || typeof payload !== "object") return undefined;
+  const source = payload as Record<string, unknown>;
+
+  const direct = source[tokenKey];
+  if (typeof direct === "string" && direct.length > 0) return direct;
+
+  const data = source.data;
+  if (data && typeof data === "object") {
+    const nested = (data as Record<string, unknown>)[tokenKey];
+    if (typeof nested === "string" && nested.length > 0) return nested;
+  }
+
+  const tokens = source.tokens;
+  if (tokens && typeof tokens === "object") {
+    const nested = (tokens as Record<string, unknown>)[tokenKey];
+    if (typeof nested === "string" && nested.length > 0) return nested;
+  }
+
+  return undefined;
+}
+
+export function setAuthCookiesFromPayload(
+  cookieStore: CookieStoreLike,
+  payload: unknown
+): boolean {
+  const accessToken = readTokenValue(payload, "accessToken");
+  const refreshToken = readTokenValue(payload, "refreshToken");
+
+  if (!accessToken && !refreshToken) return false;
+
+  const baseOptions: CookieOptions = {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  };
+
+  if (accessToken) {
+    cookieStore.set("accessToken", accessToken, baseOptions);
+  }
+  if (refreshToken) {
+    cookieStore.set("refreshToken", refreshToken, baseOptions);
+  }
+
+  return true;
+}

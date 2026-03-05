@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { api } from "../../api";
 import { isAxiosError } from "axios";
 import { logErrorResponse } from "../../_utils/utils";
-import { setAuthCookiesFromHeader } from "../../_utils/authCookies";
+import { setAuthCookiesFromHeader, setAuthCookiesFromPayload } from "../../_utils/authCookies";
 
 export async function GET() {
   try {
@@ -22,8 +22,15 @@ export async function GET() {
         },
       });
 
-      setAuthCookiesFromHeader(cookieStore, apiRes.headers["set-cookie"]);
-      return NextResponse.json({ success: true }, { status: 200 });
+      const fromHeader = setAuthCookiesFromHeader(cookieStore, apiRes.headers["set-cookie"]);
+      const fromPayload = setAuthCookiesFromPayload(cookieStore, apiRes.data);
+      const hasAccessToken = Boolean(cookieStore.get("accessToken")?.value);
+
+      if (fromHeader || fromPayload || hasAccessToken) {
+        return NextResponse.json({ success: true }, { status: 200 });
+      }
+
+      return NextResponse.json({ success: false }, { status: 200 });
     }
     return NextResponse.json({ success: false }, { status: 200 });
   } catch (error) {
