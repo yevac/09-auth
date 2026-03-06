@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { refreshSessionServer } from "./lib/api/serverApi";
 
-const privateRoutes = ["/profile", "/notes"];
+const privateRoutes = ["/notes"];
 const publicRoutes = ["/sign-in", "/sign-up"];
 
 export default async function proxy(request: NextRequest) {

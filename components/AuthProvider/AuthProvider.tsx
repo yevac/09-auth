@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { checkSession, getMe } from "@/lib/api/clientApi";
 import { useAuthStore } from "@/lib/store/authStore";
 
-const PRIVATE_PREFIXES = ["/notes", "/profile"];
+const PRIVATE_PREFIXES = ["/notes"];
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();

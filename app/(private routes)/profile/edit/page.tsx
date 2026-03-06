@@ -19,12 +19,16 @@ export default function Edit() {
   const setUser = useAuthStore((state) => state.setUser);
 
   useEffect(() => {
-    getMe().then((user) => {
-      setUsername(user.username ?? "");
-      setEmail(user.email ?? "");
-      setAvatar(user.avatar ?? "");
-    });
-  }, []);
+    getMe()
+      .then((user) => {
+        setUsername(user.username ?? "");
+        setEmail(user.email ?? "");
+        setAvatar(user.avatar ?? "");
+      })
+      .catch(() => {
+        router.replace("/");
+      });
+  }, [router]);
 
   const handleSaveUser = async (formData: FormData) => {
     const username = (formData.get("username") as string) ?? "";
