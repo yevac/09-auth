@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { refreshSessionServer } from "./lib/api/serverApi";
 
-const privateRoutes = ["/notes"];
+const notesRoutes = ["/notes"];
+const profileRoutes = ["/profile"];
 const publicRoutes = ["/sign-in", "/sign-up"];
 
 export default async function proxy(request: NextRequest) {
@@ -11,9 +12,11 @@ export default async function proxy(request: NextRequest) {
   const refreshToken = request.cookies.get("refreshToken")?.value;
 
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
-  const isPrivateRoute = privateRoutes.some((route) => pathname.startsWith(route));
+  const isNotesRoute = notesRoutes.some((route) => pathname.startsWith(route));
+  const isProfileRoute = profileRoutes.some((route) => pathname.startsWith(route));
+  const needsRefreshCheck = isNotesRoute || isProfileRoute;
 
-  if (!accessToken && refreshToken && isPrivateRoute) {
+  if (!accessToken && refreshToken && needsRefreshCheck) {
     const cookieHeader = request.headers.get("cookie") ?? "";
     const refreshed = await refreshSessionServer(cookieHeader);
 
@@ -39,14 +42,19 @@ export default async function proxy(request: NextRequest) {
       return response;
     }
 
-    const response = NextResponse.redirect(new URL("/sign-in", request.url));
+    const fallbackUrl = isNotesRoute ? "/sign-in" : "/";
+    const response = NextResponse.redirect(new URL(fallbackUrl, request.url));
     response.cookies.delete("accessToken");
     response.cookies.delete("refreshToken");
     return response;
   }
 
-  if (!accessToken && isPrivateRoute) {
+  if (!accessToken && isNotesRoute) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
+  }
+
+  if (!accessToken && isProfileRoute) {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   if (accessToken && isPublicRoute) {
