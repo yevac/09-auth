@@ -29,9 +29,10 @@ function resolveTag(slug?: string[]) {
 export async function generateMetadata({
   params,
 }: {
-  params: NotesByCategoryParams;
+  params: Promise<NotesByCategoryParams>;
 }): Promise<Metadata> {
-  const { filter } = resolveTag(params.slug);
+  const resolvedParams = await params;
+  const { filter } = resolveTag(resolvedParams.slug);
 
   const title = filter === "all" ? "All notes" : `Notes: ${filter}`;
   const description =
@@ -59,9 +60,10 @@ export async function generateMetadata({
 export default async function Page({
   params,
 }: {
-  params: NotesByCategoryParams;
+  params: Promise<NotesByCategoryParams>;
 }) {
-  const { tag } = resolveTag(params.slug);
+  const resolvedParams = await params;
+  const { tag } = resolveTag(resolvedParams.slug);
 
   const queryClient = new QueryClient();
   const queryParams = { page: 1, perPage: PER_PAGE, search: "", tag };

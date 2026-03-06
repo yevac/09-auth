@@ -1,6 +1,6 @@
 import { api } from "./api";
 import type { Note, CreateNoteParams, NoteTag } from "@/types/note";
-import { LoginRequest, RegisterRequest, UpdateUserRequest, } from "@/types/auth";
+import { CheckSessionRequest, LoginRequest, RegisterRequest, UpdateUserRequest } from "@/types/auth";
 import type { User } from "@/types/user";
 
 export async function fetchNoteById(id: string) {
@@ -51,12 +51,12 @@ export const login = async (payload: LoginRequest) => {
   return response.data;
 };
 
-export const checkSession = async (): Promise<User | null> => {
+export const checkSession = async (): Promise<boolean> => {
   try {
-    const { data } = await api.get<User | null>("/auth/session");
-    return data;
+    const { data } = await api.get<CheckSessionRequest>("/auth/session");
+    return Boolean(data?.success);
   } catch {
-    return null;
+    return false;
   }
 };
 

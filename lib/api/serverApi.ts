@@ -4,10 +4,10 @@ import type { User } from "@/types/user";
 import type { Note, NoteTag } from "@/types/note";
 import type { AxiosResponse } from "axios";
 
-function getCookieHeader(cookieFromOutside?: string) {
+async function getCookieHeader(cookieFromOutside?: string): Promise<Record<string, string>> {
   if (cookieFromOutside) return { cookie: cookieFromOutside };
 
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const cookie = cookieStore.toString();
   return cookie ? { cookie } : {};
 }
@@ -17,7 +17,7 @@ export async function checkSessionServer(
 ): Promise<AxiosResponse<User | null> | null> {
   try {
     const response = await api.get<User | null>("/auth/session", {
-      headers: getCookieHeader(cookieFromOutside),
+      headers: await getCookieHeader(cookieFromOutside),
     });
     return response;
   } catch {
@@ -34,7 +34,7 @@ export async function refreshSessionServer(cookieFromOutside?: string): Promise<
       "/auth/refresh",
       null,
       {
-        headers: getCookieHeader(cookieFromOutside),
+        headers: await getCookieHeader(cookieFromOutside),
       }
     );
     return data;
@@ -45,7 +45,7 @@ export async function refreshSessionServer(cookieFromOutside?: string): Promise<
 
 export async function getMeServer(cookieFromOutside?: string): Promise<User> {
   const { data } = await api.get<User>("/users/me", {
-    headers: getCookieHeader(cookieFromOutside),
+    headers: await getCookieHeader(cookieFromOutside),
   });
   return data;
 }
@@ -61,7 +61,7 @@ export async function fetchNotesServer(
 ) {
   const { data } = await api.get<{ notes: Note[]; totalPages: number }>("/notes", {
     params,
-    headers: getCookieHeader(cookieFromOutside),
+    headers: await getCookieHeader(cookieFromOutside),
   });
   return data;
 }
@@ -71,7 +71,7 @@ export async function fetchNoteByIdServer(
   cookieFromOutside?: string
 ): Promise<Note> {
   const { data } = await api.get<Note>(`/notes/${id}`, {
-    headers: getCookieHeader(cookieFromOutside),
+    headers: await getCookieHeader(cookieFromOutside),
   });
   return data;
 }
