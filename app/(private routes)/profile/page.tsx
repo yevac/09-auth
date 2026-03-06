@@ -24,10 +24,10 @@ export default async function Profile() {
   try {
     user = await getMeServer();
   } catch {
-    redirect("/");
+    redirect("/sign-in");
   }
 
-  if (!user) redirect("/");
+  if (!user) redirect("/sign-in");
 
   return (
     <div className={css.mainContent}>
