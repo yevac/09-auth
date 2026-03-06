@@ -7,27 +7,32 @@ import { setAuthCookiesFromHeader, setAuthCookiesFromPayload } from "../../_util
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const accessToken = cookieStore.get("accessToken")?.value;
-    const refreshToken = cookieStore.get("refreshToken")?.value;
+    const requestCookies = await cookies();
+    const accessToken = requestCookies.get("accessToken")?.value;
+    const refreshToken = requestCookies.get("refreshToken")?.value;
 
     if (accessToken) {
       return NextResponse.json({ success: true });
     }
 
     if (refreshToken) {
-      const apiRes = await api.get("auth/session", {
+      const apiRes = await api.get("/auth/session", {
         headers: {
-          Cookie: cookieStore.toString(),
+          Cookie: requestCookies.toString(),
         },
       });
 
-      const fromHeader = setAuthCookiesFromHeader(cookieStore, apiRes.headers["set-cookie"]);
-      const fromPayload = setAuthCookiesFromPayload(cookieStore, apiRes.data);
-      const hasAccessToken = Boolean(cookieStore.get("accessToken")?.value);
+      const response = NextResponse.json({ success: true }, { status: 200 });
+      const responseCookieStore = {
+        set: (name: string, value: string, options?: Parameters<typeof response.cookies.set>[2]) =>
+          response.cookies.set(name, value, options),
+      };
 
-      if (fromHeader || fromPayload || hasAccessToken) {
-        return NextResponse.json({ success: true }, { status: 200 });
+      const fromHeader = setAuthCookiesFromHeader(responseCookieStore, apiRes.headers["set-cookie"]);
+      const fromPayload = setAuthCookiesFromPayload(responseCookieStore, apiRes.data);
+
+      if (fromHeader || fromPayload) {
+        return response;
       }
 
       return NextResponse.json({ success: false }, { status: 200 });

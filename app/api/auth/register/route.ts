@@ -11,10 +11,16 @@ export async function POST(req: NextRequest) {
 
     const apiRes = await api.post('auth/register', body);
 
-    const cookieStore = await cookies();
-    const fromHeader = setAuthCookiesFromHeader(cookieStore, apiRes.headers['set-cookie']);
-    const fromPayload = setAuthCookiesFromPayload(cookieStore, apiRes.data);
-    const hasAccessToken = Boolean(cookieStore.get('accessToken')?.value);
+    const requestCookies = await cookies();
+    const response = NextResponse.json(apiRes.data, { status: apiRes.status });
+    const responseCookieStore = {
+      set: (name: string, value: string, options?: Parameters<typeof response.cookies.set>[2]) =>
+        response.cookies.set(name, value, options),
+    };
+
+    const fromHeader = setAuthCookiesFromHeader(responseCookieStore, apiRes.headers['set-cookie']);
+    const fromPayload = setAuthCookiesFromPayload(responseCookieStore, apiRes.data);
+    const hasAccessToken = Boolean(requestCookies.get('accessToken')?.value);
 
     if (!fromHeader && !fromPayload && !hasAccessToken) {
       return NextResponse.json(
@@ -23,7 +29,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json(apiRes.data, { status: apiRes.status });
+    return response;
   } catch (error) {
     if (isAxiosError(error)) {
       logErrorResponse(error.response?.data);
