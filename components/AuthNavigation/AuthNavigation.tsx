@@ -28,7 +28,7 @@ export default function AuthNavigation() {
       {isAuthenticated ? (
         <>
           <li className={css.navigationItem}>
-            <Link href="/profile" className={css.navigationLink}>
+            <Link href="/profile" prefetch={false} className={css.navigationLink}>
               Profile
             </Link>
           </li>

@@ -21,17 +21,19 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     const init = async () => {
       try {
         const session = await checkSession();
+        const isPrivate = PRIVATE_PREFIXES.some((p) => pathname.startsWith(p));
 
         if (session) {
           const user = await getMe();
           setUser(user);
         } else {
           clearIsAuthenticated();
+          if (isPrivate) router.replace("/sign-in");
         }
       } catch {
         clearIsAuthenticated();
         const isPrivate = PRIVATE_PREFIXES.some((p) => pathname.startsWith(p));
-        if (isPrivate) router.push("/sign-in");
+        if (isPrivate) router.replace("/sign-in");
       } finally {
         setLoading(false);
       }
