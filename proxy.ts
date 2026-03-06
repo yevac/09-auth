@@ -42,19 +42,18 @@ export default async function proxy(request: NextRequest) {
       return response;
     }
 
-    const fallbackUrl = isNotesRoute ? "/sign-in" : "/";
-    const response = NextResponse.redirect(new URL(fallbackUrl, request.url));
+    const response = NextResponse.redirect(new URL("/sign-in", request.url));
     response.cookies.delete("accessToken");
     response.cookies.delete("refreshToken");
     return response;
   }
 
-  if (!accessToken && isNotesRoute) {
+  if (!accessToken && !refreshToken && isNotesRoute) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
-  if (!accessToken && isProfileRoute) {
-    return NextResponse.redirect(new URL("/", request.url));
+  if (!accessToken && !refreshToken && isProfileRoute) {
+    return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
   if (accessToken && isPublicRoute) {
