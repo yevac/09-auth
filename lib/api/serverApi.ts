@@ -1,77 +1,77 @@
 import { cookies } from "next/headers";
-import { api } from "./api";
-import type { User } from "@/types/user";
-import type { Note, NoteTag } from "@/types/note";
-import type { AxiosResponse } from "axios";
+import { nextServer } from "./api";
 
-async function getCookieHeader(cookieFromOutside?: string): Promise<Record<string, string>> {
-  if (cookieFromOutside) return { cookie: cookieFromOutside };
+import { User } from "@/types/user";
+import { Note, FetchNotesResponse } from "@/types/note";
+
+export const getServerMe = async (): Promise<User> => {
+  const cookieStore = await cookies();
+  const { data } = await nextServer.get("/users/me", {
+    headers: {
+      cookie: cookieStore.toString(),
+    },
+  });
+  return data;
+};
+
+export const checkServerSession = async () => {
 
   const cookieStore = await cookies();
-  const cookie = cookieStore.toString();
-  return cookie ? { cookie } : {};
-}
+  const response = await nextServer.get("/auth/session", {
+    headers: {
 
-export async function checkSessionServer(
-  cookieFromOutside?: string
-): Promise<AxiosResponse<User | null> | null> {
-  try {
-    const response = await api.get<User | null>("/auth/session", {
-      headers: await getCookieHeader(cookieFromOutside),
-    });
-    return response;
-  } catch {
-    return null;
-  }
-}
-
-export async function refreshSessionServer(cookieFromOutside?: string): Promise<{
-  accessToken: string;
-  refreshToken?: string;
-} | null> {
-  try {
-    const { data } = await api.post<{ accessToken: string; refreshToken?: string }>(
-      "/auth/refresh",
-      null,
-      {
-        headers: await getCookieHeader(cookieFromOutside),
-      }
-    );
-    return data;
-  } catch {
-    return null;
-  }
-}
-
-export async function getMeServer(cookieFromOutside?: string): Promise<User> {
-  const { data } = await api.get<User>("/users/me", {
-    headers: await getCookieHeader(cookieFromOutside),
+      cookie: cookieStore.toString(),
+    },
   });
-  return data;
-}
+  return response;
+};
 
-export async function fetchNotesServer(
-  params: {
-    page: number;
-    perPage: number;
-    search?: string;
-    tag?: NoteTag;
-  },
-  cookieFromOutside?: string
+export async function fetchNotes(
+  page?: number,
+  searchQuery?: string,
+  tag?: string,
 ) {
-  const { data } = await api.get<{ notes: Note[]; totalPages: number }>("/notes", {
-    params,
-    headers: await getCookieHeader(cookieFromOutside),
+  const cookieStore = await cookies();
+
+  const response = await nextServer.get("/notes", {
+    params: {
+      page,
+      perPage: 12,
+      sortBy: "created",
+      search: searchQuery,
+      tag,
+    },
+    headers: {
+      cookie: cookieStore.toString(),
+    },
   });
-  return data;
+
+  return response.data;
 }
 
-export async function fetchNoteByIdServer(
-  id: string,
-  cookieFromOutside?: string
-): Promise<Note> {
-  const { data } = await api.get<Note>(`/notes/${id}`, {
-    headers: await getCookieHeader(cookieFromOutside),
+export const fetchSingleNoteById = async (id: string): Promise<Note> => {
+  const cookieStore = await cookies();
+
+  const response = await nextServer.get<Note>(`/notes/${id}`, {
+    headers: {
+      cookie: cookieStore.toString(),
+    },
   });
-  return data;
+
+  return response.data;
+};
+
+export async function fetchTags() {
+  const { notes }: FetchNotesResponse = await fetchNotes();
+
+  if (notes.length === 0) return [];
+
+  const tags = notes.reduce<string[]>((accu, note) => {
+    if (!accu.includes(note.tag)) {
+      accu.push(note.tag);
+    }
+    return accu;
+  }, []);
+
+  return tags;
 }

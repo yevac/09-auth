@@ -10,7 +10,7 @@ interface ErrorProps {
 export default function Error({ error, reset }: ErrorProps) {
   return (
     <div className={css.errorContainer}>
-      <p className={css.errorTitle}>Could not fetch note details.</p>
+      <p>Could not fetch the list of notes.</p>
       <p>{error.message}</p>
       <button onClick={reset} className={css.resetButton}>
         Reset

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-import css from "./EditProfilePage.module.css";
+import css from "./page.module.css";
 
 import { useAuthStore } from "@/lib/store/authStore";
 import { getMe, updateMe } from "@/lib/api/clientApi";
@@ -19,14 +19,12 @@ export default function Edit() {
   const setUser = useAuthStore((state) => state.setUser);
 
   useEffect(() => {
-    getMe()
-      .then((user) => {
-        setUsername(user.username ?? "");
-        setEmail(user.email ?? "");
-        setAvatar(user.avatar ?? "");
-      })
-      .catch(() => {});
-  }, [router]);
+    getMe().then((user) => {
+      setUsername(user.username ?? "");
+      setEmail(user.email ?? "");
+      setAvatar(user.avatar ?? "");
+    });
+  }, []);
 
   const handleSaveUser = async (formData: FormData) => {
     const username = (formData.get("username") as string) ?? "";
@@ -40,7 +38,7 @@ export default function Edit() {
   };
 
   const handleCancel = () => {
-    router.back();
+    router.push("/profile");
   };
 
   return (
@@ -53,20 +51,14 @@ export default function Edit() {
           height={300}
           alt="Avatar"
         />
-
+        <p>
+          <span style={{ fontWeight: "bold" }}>Email: </span>
+          {email}
+        </p>
         <form action={handleSaveUser} className={css.form}>
-          <input
-            type="email"
-            name="email"
-            value={email}
-            readOnly
-            className={css.input}
-          />
-
           <input
             type="text"
             name="username"
-            required
             value={username}
             onChange={handleChange}
             className={css.input}

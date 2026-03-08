@@ -54,6 +54,23 @@
   background-color: #bb2d3b;
 }
 
+.details {
+  align-self: flex-end;
+  padding: 6px 12px;
+  font-size: 14px;
+  color: rgb(74, 73, 73);
+  background-color: aliceblue;
+  border: 1px solid #b6d4fe;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.details:hover {
+  color: #fff;
+  background-color: #4c90f7;
+}
+
 .footer {
   display: flex;
   justify-content: space-between;

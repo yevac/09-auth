@@ -1,86 +1,96 @@
-import type { Metadata } from "next";
-import TAGS from "@/constants/noteTags";
-import { notFound } from "next/navigation";
-import type { NoteTag } from "@/types/note";
+import { Metadata } from "next";
+import {
+  HydrationBoundary,
+  dehydrate,
+  QueryClient,
+} from "@tanstack/react-query";
+import { fetchNotes } from "@/lib/api/serverApi";
+import NotesClient from "./Notes.client";
 
-import NotesPageClient from "./NotesPageClient";
-import { QueryClient, dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import { fetchNotesServer } from "@/lib/api/serverApi";
-
-interface NotesByCategoryParams {
-  slug?: string[];
-}
-
-function isNoteTag(value: string): value is NoteTag {
-  return TAGS.includes(value as NoteTag);
-}
-
-const PER_PAGE = 12;
-const OG_IMAGE = "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg";
-
-function resolveTag(slug?: string[]) {
-  const filter = slug?.[0] ?? "all";
-
-  if (filter === "all") return { filter, tag: undefined as NoteTag | undefined };
-  if (isNoteTag(filter)) return { filter, tag: filter };
-  notFound();
+interface NotesByTagProps {
+  searchParams: Promise<{ page?: string; search?: string }>;
+  params: Promise<{ slug: string[] }>;
 }
 
 export async function generateMetadata({
+  searchParams,
   params,
-}: {
-  params: Promise<NotesByCategoryParams>;
-}): Promise<Metadata> {
-  const resolvedParams = await params;
-  const { filter } = resolveTag(resolvedParams.slug);
+}: NotesByTagProps): Promise<Metadata> {
+  const sp = await searchParams;
+  const page = Number(sp?.page ?? "1") || 1;
+  const search = sp?.search || "";
 
-  const title = filter === "all" ? "All notes" : `Notes: ${filter}`;
-  const description =
-    filter === "all"
-      ? "Browse all notes in NoteHub."
-      : `Browse notes filtered by "${filter}" tag in NoteHub.`;
+  const { slug } = await params;
+  const first = slug?.[0] ?? "all";
+  const tag = first === "all" ? undefined : first;
 
-  const url =
-    filter === "all"
-      ? "https://notehub-public.goit.study/notes/filter/all"
-      : `https://notehub-public.goit.study/notes/filter/${encodeURIComponent(filter)}`;
+  const titleBase = search ? `${tag} - search "${search}"` : tag;
+
+  const title =
+    page > 1
+      ? `${titleBase} (page ${page}) | NoteHub`
+      : `${titleBase} | Notehub`;
+
+  const description = search
+    ? `Browse notes in ${tag?.toLowerCase()} filtered by search "${search}"`
+    : `Browse notes in ${tag?.toLowerCase()}`;
+
+  const canonical = new URL(`https:notehub.com/filter/${first}`);
+  if (search) canonical.searchParams.set("search", search);
+  if (page > 1) canonical.searchParams.set("page", String(page));
 
   return {
     title,
     description,
+    alternates: {
+      canonical: canonical.toString(),
+    },
     openGraph: {
       title,
       description,
-      url,
-      images: [OG_IMAGE],
+      url: "/notes/filter/all",
+      siteName: "NoteHub",
+      type: "article",
+      images: [
+        {
+          url: "https://ac.goit.global/fullstack/react/notehub-og-meta.jpg",
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["https://ac.goit.global/fullstack/react/og-meta.jpg"],
     },
   };
 }
 
-export default async function Page({
+export default async function NotesByTag({
+  searchParams,
   params,
-}: {
-  params: Promise<NotesByCategoryParams>;
-}) {
-  const resolvedParams = await params;
-  const { tag } = resolveTag(resolvedParams.slug);
+}: NotesByTagProps) {
+  const sp = await searchParams;
+  const page = Number(sp?.page ?? "1") || 1;
+  const search = sp?.search || "";
+
+  const { slug } = (await params) ?? {};
+  const first = slug?.[0] ?? "all";
+  const tag = first === "all" ? undefined : first;
 
   const queryClient = new QueryClient();
-  const queryParams = { page: 1, perPage: PER_PAGE, search: "", tag };
 
-await queryClient.prefetchQuery({
-  queryKey: ["notes", queryParams],
-  queryFn: () => fetchNotesServer(queryParams),
-});
+  await queryClient.prefetchQuery({
+    queryKey: ["notes", page, search, tag],
+    queryFn: () => fetchNotes(page, search, tag),
+  });
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <NotesPageClient
-        initialPage={1}
-        initialSearch=""
-        tag={tag}
-      />
-
+      <NotesClient initialPage={page} initialSearch={search} tag={tag} />
     </HydrationBoundary>
   );
 }

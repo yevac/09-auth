@@ -1,43 +1,49 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { api } from '../../api';
-import { cookies } from 'next/headers';
-import { isAxiosError } from 'axios';
-import { logErrorResponse } from '../../_utils/utils';
-import { setAuthCookiesFromHeader, setAuthCookiesFromPayload } from '../../_utils/authCookies';
+import { NextRequest, NextResponse } from "next/server";
+import { api } from "../../api";
+import { cookies } from "next/headers";
+import { parse } from "cookie";
+import { isAxiosError } from "axios";
+import { logErrorResponse } from "../../_utils/utils";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const apiRes = await api.post('auth/login', body);
+    const apiRes = await api.post("auth/login", body);
 
-    const requestCookies = await cookies();
-    const response = NextResponse.json(apiRes.data, { status: apiRes.status });
-    const responseCookieStore = {
-      set: (name: string, value: string, options?: Parameters<typeof response.cookies.set>[2]) =>
-        response.cookies.set(name, value, options),
-    };
+    const cookieStore = await cookies();
+    const setCookie = apiRes.headers["set-cookie"];
 
-    const fromHeader = setAuthCookiesFromHeader(responseCookieStore, apiRes.headers['set-cookie']);
-    const fromPayload = setAuthCookiesFromPayload(responseCookieStore, apiRes.data);
-    const hasAccessToken = Boolean(requestCookies.get('accessToken')?.value);
+    if (setCookie) {
+      const cookieArray = Array.isArray(setCookie) ? setCookie : [setCookie];
+      for (const cookieStr of cookieArray) {
+        const parsed = parse(cookieStr);
+        const options = {
+          expires: parsed.Expires ? new Date(parsed.Expires) : undefined,
+          path: parsed.Path,
+          maxAge: Number(parsed["Max-Age"]),
+        };
+        if (parsed.accessToken)
+          cookieStore.set("accessToken", parsed.accessToken, options);
+        if (parsed.refreshToken)
+          cookieStore.set("refreshToken", parsed.refreshToken, options);
+      }
 
-    if (!fromHeader && !fromPayload && !hasAccessToken) {
-      return NextResponse.json(
-        { error: 'Authentication succeeded but no tokens were provided by upstream API' },
-        { status: 502 }
-      );
+      return NextResponse.json(apiRes.data, { status: apiRes.status });
     }
 
-    return response;
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   } catch (error) {
     if (isAxiosError(error)) {
       logErrorResponse(error.response?.data);
       return NextResponse.json(
         { error: error.message, response: error.response?.data },
-        { status: error.response?.status ?? 500 }
+        { status: error.status },
       );
     }
     logErrorResponse({ message: (error as Error).message });
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }

@@ -1,3 +1,3 @@
-export default function ParallelModal() {
-    return null;
+export default function ModalDefault() {
+  return null;
 }

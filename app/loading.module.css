@@ -1,25 +1,20 @@
-.loadingContainer {
-  margin: 0 auto;
-  width: fit-content;
-  padding: 30px;
-  border-radius: 8px;
-
+.loaderContainer {
+  padding-top: 20px;
   display: flex;
   flex-direction: column;
+  gap: 10px;
   justify-content: center;
-  align-items: center;
 }
 
 .loadingPharagraph {
   text-align: center;
 
   display: block;
-  font-size: 16px;
+  font-size: 18px;
   color: #495057;
   margin-bottom: 16px;
 }
 
-/* loader button */
 :root {
   --sp-size: 36px;
   --sp-thickness: 6px;

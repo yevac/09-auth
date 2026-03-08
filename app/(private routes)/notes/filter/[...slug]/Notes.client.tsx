@@ -1,78 +1,79 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { useDebounce } from "use-debounce";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useDebounceValue } from "usehooks-ts";
+
+import css from "./Notes.client.module.css";
+
+import type { FetchNotesResponse } from "@/types/note";
+import { fetchNotes } from "@/lib/api/clientApi";
+import NoteList from "@/components/NoteList/NoteList";
+import Pagination from "@/components/Pagination/Pagination";
+import SearchBox from "@/components/SearchBox/SearchBox";
+import ErrorBox from "@/components/ErrorBox/ErrorBox";
+import Loader from "@/components/Loader/Loader";
 import Link from "next/link";
 
-import { getNotes } from "@/lib/api/clientApi";
-import type { Note, NoteTag } from "@/types/note";
-
-import SearchBox from "@/components/SearchBox/SearchBox";
-import Pagination from "@/components/Pagination/Pagination";
-import NoteList from "@/components/NoteList/NoteList";
-
-interface FetchNotesResponse {
-  notes: Note[];
-  totalPages: number;
+interface NotesPageProps {
+  initialPage: number;
+  initialSearch: string;
+  tag?: string;
 }
 
-interface NotesClientProps {
-  tag?: NoteTag;
-}
+export default function NotesPage({
+  initialPage,
+  initialSearch,
+  tag,
+}: NotesPageProps) {
+  const [page, setPage] = useState(initialPage);
+  const [search, setSearch] = useState(initialSearch);
+  const [debauncedSearch] = useDebounceValue(search, 1000);
 
-const PER_PAGE = 12;
-
-export default function NotesClient({ tag }: NotesClientProps) {
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-
-  const [debouncedSearch] = useDebounce(search, 500);
-
-  const { data, isLoading, isError, error } = useQuery<FetchNotesResponse>({
-    queryKey: ["notes", { page, perPage: PER_PAGE, search: debouncedSearch, tag }],
-    queryFn: () =>
-      getNotes({
-        page,
-        perPage: PER_PAGE,
-        search: debouncedSearch,
-        tag,
-      }),
-    placeholderData: keepPreviousData,
-    refetchOnMount: false,
-  });
+  const { data, isLoading, isError, error, isRefetching } =
+    useQuery<FetchNotesResponse>({
+      queryKey: ["notes", page, debauncedSearch, tag],
+      queryFn: () => fetchNotes(page, debauncedSearch, tag),
+      placeholderData: keepPreviousData,
+      staleTime: 60 * 1000,
+    });
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
     setPage(1);
   };
 
-  if (isLoading) return <p>Loading, please wait...</p>;
-  if (isError || !data) return <p>{(error as Error)?.message ?? "Something went wrong."}</p>;
-
   return (
     <div>
-      <div>
-        <SearchBox value={search} onSearch={handleSearchChange} />
+      <div className={css.app}>
+        <header className={css.toolbar}>
+          <SearchBox search={search} onChangeSearch={handleSearchChange} />
 
-        {data.totalPages > 1 && (
-          <Pagination
-            page={page}
-            totalPages={data.totalPages}
-            onPageChange={setPage}
-          />
-        )}
+          {data?.totalPages && data?.totalPages > 1 ? (
+            <Pagination
+              totalPages={data?.totalPages ?? 0}
+              page={page}
+              setPage={setPage}
+            />
+          ) : null}
 
-        <Link href="/notes/action/create" scroll={false}>
-          Create note +
-        </Link>
+          <div className={css.button}>
+            <Link href="/notes/action/create">Create note +</Link>
+          </div>
+        </header>
+        <div className={css.contentContainer}>
+          {isLoading && <Loader />}
+
+          {data && !isLoading && <NoteList notes={data.notes} />}
+
+          {isRefetching && !isLoading && <Loader />}
+
+          {!isError && !isLoading && !data?.notes?.length && !isLoading && (
+            <ErrorBox query={debauncedSearch} />
+          )}
+          {isError && <ErrorBox errorMessage={error.message} />}
+        </div>
       </div>
-
-      {data.notes.length > 0 ? (
-        <NoteList notes={data.notes} />
-      ) : (
-        <p>No notes found.</p>
-      )}
     </div>
   );
 }

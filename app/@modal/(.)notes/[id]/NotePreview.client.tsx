@@ -1,46 +1,63 @@
 "use client";
 
+import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { useParams } from 'next/navigation';
-import css from "./NotePreview.module.css";
-import { fetchNoteById } from "@/lib/api/clientApi";
+
+import { fetchSingleNoteById } from "@/lib/api/clientApi";
 import Modal from "@/components/Modal/Modal";
 
-export default function NotePreviewClient() {
-	const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-  const handleClose = () => router.back();
-  
+import css from "./NotePreview.module.css";
 
-  const { data: note, isLoading, error } = useQuery({
+export default function NotesPreview() {
+  const router = useRouter();
+  const { id } = useParams<{ id: string }>();
+
+  const {
+    data: note,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["note", id],
-    queryFn: () => fetchNoteById(id),
+    queryFn: () => fetchSingleNoteById(id),
     refetchOnMount: false,
   });
 
-  if (isLoading) return <p>Loading, please wait...</p>;
-  if (error instanceof Error || !note) {
-  return <p>Something went wrong.</p>; 
-}
-
-  const formattedDate = note.updatedAt
-    ? `Updated at: ${new Date(note.updatedAt).toLocaleDateString()}`
-    : `Created at: ${new Date(note.createdAt).toLocaleDateString()}`;
+  function formatDate(dateString: string) {
+    return new Intl.DateTimeFormat("uk-UA", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(dateString));
+  }
 
   return (
-    <Modal closeModal={handleClose}>
-      <div className={css.container}>
-        <div className={css.item}>
-          <div className={css.header}>
-            <h2>{note.title}</h2>
-            <p className={css.tag}>{note.tag}</p>
-          </div>
-          <p className={css.content}>{note.content}</p>
-          <p className={css.date}>{formattedDate}</p>
+    <>
+      {isLoading && <p>Loading...</p>}
+      {(error || !note) && (
+        <div>
+          <h2>Error occured:</h2>
+          <p>{error?.message}</p>
         </div>
-        <button type="button" className={css.backBtn} onClick={handleClose}>Back</button>
-      </div>
-    </Modal>
+      )}
+      {note ? (
+        <Modal onClose={() => router.back()}>
+          <div className={css.notePreviewContainer}>
+            <h2>{note.title}</h2>
+            <p>{note.content}</p>
+            <h3>Tag: {note.tag.toLowerCase()}</h3>
+            <p className={css.noteDate}>
+              {note.updatedAt
+                ? formatDate(note.updatedAt)
+                : formatDate(note.createdAt)}
+            </p>
+            <button className={css.goBackBtn} onClick={() => router.back()}>
+              Go back
+            </button>
+          </div>
+        </Modal>
+      ) : null}
+    </>
   );
-};
+}

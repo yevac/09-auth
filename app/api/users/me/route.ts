@@ -12,24 +12,22 @@ export async function GET() {
 
     const res = await api.get("/users/me", {
       headers: {
-        cookie: cookieStore.toString(),
+        Cookie: cookieStore.toString(),
       },
     });
-
     return NextResponse.json(res.data, { status: res.status });
   } catch (error) {
     if (isAxiosError(error)) {
       logErrorResponse(error.response?.data);
       return NextResponse.json(
         { error: error.message, response: error.response?.data },
-        { status: error.response?.status ?? 500 }
+        { status: error.status },
       );
     }
-
     logErrorResponse({ message: (error as Error).message });
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -41,24 +39,22 @@ export async function PATCH(request: Request) {
 
     const res = await api.patch("/users/me", body, {
       headers: {
-        cookie: cookieStore.toString(),
+        Cookie: cookieStore.toString(),
       },
     });
-
     return NextResponse.json(res.data, { status: res.status });
   } catch (error) {
     if (isAxiosError(error)) {
       logErrorResponse(error.response?.data);
       return NextResponse.json(
         { error: error.message, response: error.response?.data },
-        { status: error.response?.status ?? 500 }
+        { status: error.status },
       );
     }
-
     logErrorResponse({ message: (error as Error).message });
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
