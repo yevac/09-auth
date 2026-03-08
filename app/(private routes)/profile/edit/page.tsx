@@ -26,7 +26,7 @@ export default function EditProfile() {
         const user = await getMe();
 
         if (!user) {
-          router.push("/signin");
+          router.push("/sign-in");
           return;
         }
 
@@ -35,7 +35,7 @@ export default function EditProfile() {
         setAvatar(user.avatar ?? "");
         setUser(user);
       } catch {
-        router.push("/signin");
+        router.push("/sign-in");
         return;
       } finally {
         setLoading(false);
