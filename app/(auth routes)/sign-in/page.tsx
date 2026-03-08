@@ -2,12 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
 import { login } from "@/lib/api/clientApi";
-import { ApiError } from "@/app/api/api";
 import { LoginRequest } from "@/types/auth";
 import { useAuthStore } from "@/lib/store/authStore";
-
 import css from "./page.module.css";
 
 export default function SignIn() {
@@ -16,7 +13,7 @@ export default function SignIn() {
   const setUser = useAuthStore((state) => state.setUser);
 
   const handleSubmit = async (formData: FormData) => {
-    const formValues = Object.fromEntries(formData) as LoginRequest;
+    const formValues = Object.fromEntries(formData) as unknown as LoginRequest;
 
     try {
       const response = await login(formValues);
@@ -28,11 +25,11 @@ export default function SignIn() {
         setError("Invalid email or password");
       }
     } catch (error) {
-      setError(
-        (error as ApiError).message ??
-          (error as ApiError).response?.data?.error ??
-          "Oops... some error",
-      );
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Oops... some error");
+      }
     }
   };
 
@@ -43,24 +40,12 @@ export default function SignIn() {
       <form className={css.form} action={handleSubmit}>
         <div className={css.formGroup}>
           <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="email"
-            name="email"
-            className={css.input}
-            required
-          />
+          <input id="email" type="email" name="email" className={css.input} required />
         </div>
 
         <div className={css.formGroup}>
           <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            name="password"
-            className={css.input}
-            required
-          />
+          <input id="password" type="password" name="password" className={css.input} required />
         </div>
 
         <div className={css.actions}>

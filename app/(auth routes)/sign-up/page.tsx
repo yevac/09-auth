@@ -7,7 +7,6 @@ import css from "./page.module.css";
 
 import type { RegisterRequest } from "@/types/auth";
 import { register } from "@/lib/api/clientApi";
-import { ApiError } from "@/app/api/api";
 import { useAuthStore } from "@/lib/store/authStore";
 
 export default function SignUp() {
@@ -17,9 +16,12 @@ export default function SignUp() {
 
   const handleSubmit = async (formData: FormData) => {
     try {
-      const formValues = Object.fromEntries(formData) as RegisterRequest;
+      const formValues = Object.fromEntries(
+        formData.entries(),
+      ) as unknown as RegisterRequest;
 
       const response = await register(formValues);
+
       if (response) {
         setUser(response);
         router.push("/profile");
@@ -27,17 +29,18 @@ export default function SignUp() {
         setError("Invalid email or password");
       }
     } catch (error) {
-      setError(
-        (error as ApiError).message ??
-          (error as ApiError).response?.data?.error ??
-          "Oops... some error",
-      );
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Oops... some error");
+      }
     }
   };
 
   return (
     <main className={css.mainContent}>
       <h1 className={css.formTitle}>Sign up</h1>
+
       <form className={css.form} action={handleSubmit}>
         <div className={css.formGroup}>
           <label htmlFor="email">Email</label>
