@@ -3,7 +3,6 @@ import type { Note, CreateNotePayload, FetchNotesResponse } from "@/types/note";
 import {
   LoginRequest,
   RegisterRequest,
-  CheckSessionRequest,
   UpdateUserRequest,
 } from "@/types/auth";
 import { User } from "@/types/user";
@@ -54,7 +53,7 @@ export const login = async (payload: LoginRequest) => {
 
 export const checkSession = async () => {
   try {
-    const response = await nextServer.get<User>("/users/me");
+    const response = await nextServer.get("/auth/session");
     return response.data;
   } catch {
     return null;
