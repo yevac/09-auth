@@ -50,19 +50,15 @@ function setAuthCookies(
   accessToken: string,
   refreshToken: string
 ) {
-  response.cookies.set(ACCESS_TOKEN_COOKIE, accessToken, {
+  const options = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: true,
+    sameSite: "none" as const, 
     path: "/",
-  });
+  };
 
-  response.cookies.set(REFRESH_TOKEN_COOKIE, refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-  });
+  response.cookies.set(ACCESS_TOKEN_COOKIE, accessToken, options);
+  response.cookies.set(REFRESH_TOKEN_COOKIE, refreshToken, options);
 }
 
 function clearAuthCookies(response: NextResponse) {
