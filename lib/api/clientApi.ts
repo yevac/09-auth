@@ -51,7 +51,14 @@ export const login = async (payload: LoginRequest) => {
 };
 
 export const logout = async (): Promise<void> => {
-  await nextServer.post("/auth/logout");
+  const response = await fetch("/api/auth/logout", {
+    method: "POST",
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Logout failed");
+  }
 };
 
 export const updateMe = async (payload: UpdateUserRequest) => {
