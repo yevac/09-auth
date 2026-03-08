@@ -4,11 +4,6 @@ import Link from "next/link";
 import { getServerMe } from "@/lib/api/serverApi";
 import css from "./page.module.css";
 
-export const metadata: Metadata = {
-  title: "Profile",
-  description: "User profile page",
-};
-
 export async function generateMetadata(): Promise<Metadata> {
   const user = await getServerMe();
 
