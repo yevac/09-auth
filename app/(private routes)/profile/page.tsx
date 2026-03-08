@@ -1,24 +1,21 @@
-import Link from "next/link";
 import Image from "next/image";
-import type { Metadata } from "next";
-
+import Link from "next/link";
 import { getServerMe } from "@/lib/api/serverApi";
-
 import css from "./page.module.css";
-
-export const metadata: Metadata = {
-  title: "Profile | NoteHub",
-  description: "Your NoteHub profile",
-  alternates: { canonical: "/profile" },
-  openGraph: {
-    title: "Profile | NoteHub",
-    description: "Your NoteHub profile",
-    url: "/profile",
-  },
-};
 
 export default async function Profile() {
   const user = await getServerMe();
+
+  if (!user) {
+    return (
+      <div className={css.mainContent}>
+        <section className={css.profileCard}>
+          <h1 className={css.formTitle}>My Profile</h1>
+          <p>User not found</p>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className={css.mainContent}>
@@ -34,8 +31,10 @@ export default async function Profile() {
               alt="Avatar"
             />
           </div>
+
           <h2>Name: {user.username}</h2>
           <h2>Email: {user.email}</h2>
+
           <p>
             Some description: Lorem ipsum dolor sit amet consectetur adipisicing
             elit...
