@@ -2,20 +2,21 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import css from "./page.module.css";
 
 import { login } from "@/lib/api/clientApi";
-import { ApiError } from "@/app/api/api";
-import { LoginRequest } from "@/types/auth";
+import type { LoginRequest } from "@/types/auth";
 import { useAuthStore } from "@/lib/store/authStore";
-
-import css from "./page.module.css";
 
 export default function SignIn() {
   const router = useRouter();
   const [error, setError] = useState("");
   const setUser = useAuthStore((state) => state.setUser);
 
-  const handleSubmit = async (formData: FormData) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
     const formValues = Object.fromEntries(formData) as LoginRequest;
 
     try {
@@ -23,16 +24,16 @@ export default function SignIn() {
 
       if (response) {
         setUser(response);
-        router.push("/profile");
+        router.replace("/profile");
       } else {
         setError("Invalid email or password");
       }
     } catch (error) {
-      setError(
-        (error as ApiError).message ??
-          (error as ApiError).response?.data?.error ??
-          "Oops... some error",
-      );
+      if (error instanceof Error) {
+        setError(error.message || "Oops... some error");
+      } else {
+        setError("Oops... some error");
+      }
     }
   };
 
@@ -40,7 +41,7 @@ export default function SignIn() {
     <main className={css.mainContent}>
       <h1 className={css.formTitle}>Sign in</h1>
 
-      <form className={css.form} action={handleSubmit}>
+      <form className={css.form} onSubmit={handleSubmit}>
         <div className={css.formGroup}>
           <label htmlFor="email">Email</label>
           <input
