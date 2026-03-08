@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const privateRoutes = ["/notes"];
-const authRoutes = ["/signin", "/signup"];
+const authRoutes = ["/sign-in", "/sign-up"];
 
 const ACCESS_TOKEN_COOKIE = "accessToken";
 const REFRESH_TOKEN_COOKIE = "refreshToken";
@@ -129,7 +129,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (isPrivate) {
-    const response = NextResponse.redirect(new URL("/signin", request.url));
+    const response = NextResponse.redirect(new URL("/sign-in", request.url));
     clearAuthCookies(response);
     return response;
   }
@@ -138,5 +138,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/notes/:path*", "/signin", "/signup"],
+  matcher: ["/notes/:path*", "/sign-in", "/sign-up"],
 };
