@@ -41,13 +41,41 @@ export async function deleteNote(noteId: Note["id"]) {
 }
 
 export const register = async (payload: RegisterRequest) => {
-  const response = await api.post<User>("/auth/register", payload);
-  return response.data;
+  const response = await fetch("/api/auth/register", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.error || data?.message || "Registration failed");
+  }
+
+  return data as User;
 };
 
 export const login = async (payload: LoginRequest) => {
-  const response = await api.post<User>("/auth/login", payload);
-  return response.data;
+  const response = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.error || data?.message || "Login failed");
+  }
+
+  return data as User;
 };
 
 export const logout = async (): Promise<void> => {
