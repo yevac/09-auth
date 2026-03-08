@@ -26,7 +26,7 @@ export default function Edit() {
         setAvatar(user.avatar ?? "");
       })
       .catch(() => {
-        router.replace("/sign-in");
+        router.push("/profile");
       });
   }, [router]);
 
