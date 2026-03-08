@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { getMe, updateMe } from "@/lib/api/clientApi";
-
 import css from "./page.module.css";
 
 export default function EditProfile() {
@@ -15,39 +14,54 @@ export default function EditProfile() {
   const [avatar, setAvatar] = useState("");
 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
-      const user = await getMe();
+      try {
+        const user = await getMe();
 
-      if (!user) {
+        if (!user) {
+          router.push("/sign-in");
+          return;
+        }
+
+        setUsername(user.username ?? "");
+        setEmail(user.email ?? "");
+        setAvatar(user.avatar ?? "");
+      } catch {
         router.push("/sign-in");
         return;
+      } finally {
+        setLoading(false);
       }
-
-      setUsername(user.username ?? "");
-      setEmail(user.email ?? "");
-      setAvatar(user.avatar ?? "");
-
-      setLoading(false);
     };
 
     fetchUser();
   }, [router]);
 
   const handleSubmit = async (formData: FormData) => {
-    const data = {
-      username: formData.get("username") as string,
-      email: formData.get("email") as string,
-      avatar: formData.get("avatar") as string,
-    };
+    try {
+      const data = {
+        username: (formData.get("username") as string) ?? "",
+        email: (formData.get("email") as string) ?? "",
+        avatar: (formData.get("avatar") as string) ?? "",
+      };
 
-    await updateMe(data);
-
-    router.push("/profile");
+      await updateMe(data);
+      router.push("/profile");
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Failed to update profile");
+      }
+    }
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <main className={css.mainContent}>
@@ -94,6 +108,8 @@ export default function EditProfile() {
           Save
         </button>
       </form>
+
+      {error && <p className={css.error}>{error}</p>}
     </main>
   );
 }
