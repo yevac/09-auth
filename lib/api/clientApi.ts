@@ -1,4 +1,4 @@
-import { nextServer } from "./api";
+import { api } from "./api";
 import type { Note, CreateNotePayload, FetchNotesResponse } from "@/types/note";
 import type {
   LoginRequest,
@@ -8,7 +8,7 @@ import type {
 import type { User } from "@/types/user";
 
 export async function fetchSingleNoteById(id: string) {
-  const response = await nextServer.get<Note>(`/notes/${id}`);
+  const response = await api.get<Note>(`/notes/${id}`);
   return response.data;
 }
 
@@ -17,7 +17,7 @@ export async function fetchNotes(
   searchQuery?: string,
   tag?: string,
 ) {
-  const response = await nextServer.get<FetchNotesResponse>("/notes", {
+  const response = await api.get<FetchNotesResponse>("/notes", {
     params: {
       page,
       perPage: 12,
@@ -31,22 +31,22 @@ export async function fetchNotes(
 }
 
 export async function createNote(payload: CreateNotePayload): Promise<Note> {
-  const response = await nextServer.post<Note>("/notes", payload);
+  const response = await api.post<Note>("/notes", payload);
   return response.data;
 }
 
 export async function deleteNote(noteId: Note["id"]) {
-  const response = await nextServer.delete<Note>(`/notes/${noteId}`);
+  const response = await api.delete<Note>(`/notes/${noteId}`);
   return response.data;
 }
 
 export const register = async (payload: RegisterRequest) => {
-  const response = await nextServer.post<User>("/auth/register", payload);
+  const response = await api.post<User>("/auth/register", payload);
   return response.data;
 };
 
 export const login = async (payload: LoginRequest) => {
-  const response = await nextServer.post<User>("/auth/login", payload);
+  const response = await api.post<User>("/auth/login", payload);
   return response.data;
 };
 
@@ -62,7 +62,7 @@ export const logout = async (): Promise<void> => {
 };
 
 export const updateMe = async (payload: UpdateUserRequest) => {
-  const { data } = await nextServer.patch<User>("/users/me", payload);
+  const { data } = await api.patch<User>("/users/me", payload);
   return data;
 };
 
