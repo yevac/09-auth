@@ -1,31 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
-
 import { checkSession, getMe } from "@/lib/api/clientApi";
 import { useAuthStore } from "@/lib/store/authStore";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
-const PRIVATE_PREFIXES = ["/notes"];
+type Props = {
+  children: React.ReactNode;
+};
 
-export default function AuthProvider({ children }: { children: React.ReactNode }) {
+const PRIVATE_PREFIXES = ["/notes", "/profile"];
+
+export default function AuthProvider({ children }: Props) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const setUser = useAuthStore((s) => s.setUser);
-  const clearIsAuthenticated = useAuthStore((s) => s.clearIsAuthenticated);
+  const setUser = useAuthStore((state) => state.setUser);
+  const clearIsAuthenticated = useAuthStore(
+    (state) => state.clearIsAuthenticated,
+  );
 
-  const [loading, setLoading] = useState(true);
-
-   useEffect(() => {
-    const init = async () => {
+  useEffect(() => {
+    const fetchUser = async () => {
       try {
-        const session = await checkSession();
+        const isAuthenticated = await checkSession();
         const isPrivate = PRIVATE_PREFIXES.some((p) => pathname.startsWith(p));
 
-        if (session) {
+        if (isAuthenticated) {
           const user = await getMe();
-          setUser(user);
+          if (user) setUser(user);
         } else {
           clearIsAuthenticated();
           if (isPrivate) router.replace("/sign-in");
@@ -34,15 +37,11 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
         clearIsAuthenticated();
         const isPrivate = PRIVATE_PREFIXES.some((p) => pathname.startsWith(p));
         if (isPrivate) router.replace("/sign-in");
-      } finally {
-        setLoading(false);
       }
     };
 
-    init();
+    fetchUser();
   }, [pathname, router, setUser, clearIsAuthenticated]);
 
-  if (loading) return null;
-
-  return <>{children}</>;
+  return children;
 }
