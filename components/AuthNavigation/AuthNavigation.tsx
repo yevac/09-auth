@@ -16,11 +16,12 @@ export default function AuthNavigation() {
     (state) => state.clearIsAuthenticated,
   );
 
-  const handleLogout = async () => {
-    await logout();
-    clearIsAuthenticated();
-    router.push("/sign-in");
-  };
+ const handleLogout = async () => {
+  await logout();
+  clearIsAuthenticated();
+  router.push("/sign-in");
+  router.refresh();
+};
 
   return (
     <ul className={css.authNaviContainer}>
