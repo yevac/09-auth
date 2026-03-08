@@ -25,9 +25,7 @@ export default function Edit() {
         setEmail(user.email ?? "");
         setAvatar(user.avatar ?? "");
       })
-      .catch(() => {
-        router.push("/profile");
-      });
+      .catch(() => {});
   }, [router]);
 
   const handleSaveUser = async (formData: FormData) => {
