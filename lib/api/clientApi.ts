@@ -1,15 +1,14 @@
 import { nextServer } from "./api";
 import type { Note, CreateNotePayload, FetchNotesResponse } from "@/types/note";
-import {
+import type {
   LoginRequest,
   RegisterRequest,
-  CheckSessionRequest,
   UpdateUserRequest,
 } from "@/types/auth";
-import { User } from "@/types/user";
+import type { User } from "@/types/user";
 
 export async function fetchSingleNoteById(id: string) {
-  const response = await nextServer.get<Note>(`/notes/${id}`, {});
+  const response = await nextServer.get<Note>(`/notes/${id}`);
   return response.data;
 }
 
@@ -38,7 +37,6 @@ export async function createNote(payload: CreateNotePayload): Promise<Note> {
 
 export async function deleteNote(noteId: Note["id"]) {
   const response = await nextServer.delete<Note>(`/notes/${noteId}`);
-
   return response.data;
 }
 
@@ -52,8 +50,8 @@ export const login = async (payload: LoginRequest) => {
   return response.data;
 };
 
-export const checkSession = async () => {
-  const response = await nextServer.get<CheckSessionRequest>("/auth/session");
+export const checkSession = async (): Promise<boolean> => {
+  const response = await nextServer.get<boolean>("/auth/session");
   return response.data;
 };
 
@@ -67,6 +65,6 @@ export const logout = async (): Promise<void> => {
 };
 
 export const updateMe = async (payload: UpdateUserRequest) => {
-  const { data } = await nextServer.patch<User>("/users/me", payload);
-  return data;
+  const response = await nextServer.patch<User>("/users/me", payload);
+  return response.data;
 };
