@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import type { AxiosResponse } from "axios";
 import type { User } from "@/types/user";
 import type { Note, FetchNotesResponse } from "@/types/note";
 import { api } from "./api";
@@ -7,39 +8,29 @@ export const getServerMe = async (): Promise<User | null> => {
   try {
     const cookieStore = await cookies();
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/auth/session`, {
+    const response = await api.get<User>("/users/me", {
       headers: {
-        cookie: cookieStore.toString(),
+        Cookie: cookieStore.toString(),
       },
-      cache: "no-store",
     });
 
-    if (!response.ok) {
-      return null;
-    }
-
-    return (await response.json()) as User;
+    return response.data;
   } catch {
     return null;
   }
 };
 
-export const checkServerSession = async (): Promise<User | null> => {
+export const checkServerSession = async (): Promise<AxiosResponse<User> | null> => {
   try {
     const cookieStore = await cookies();
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/auth/session`, {
+    const response = await api.get<User>("/auth/session", {
       headers: {
-        cookie: cookieStore.toString(),
+        Cookie: cookieStore.toString(),
       },
-      cache: "no-store",
     });
 
-    if (!response.ok) {
-      return null;
-    }
-
-    return (await response.json()) as User;
+    return response;
   } catch {
     return null;
   }
@@ -49,7 +40,7 @@ export async function fetchNotes(
   page?: number,
   searchQuery?: string,
   tag?: string,
-) {
+): Promise<FetchNotesResponse> {
   const cookieStore = await cookies();
 
   const response = await api.get<FetchNotesResponse>("/notes", {
@@ -61,7 +52,7 @@ export async function fetchNotes(
       tag,
     },
     headers: {
-      cookie: cookieStore.toString(),
+      Cookie: cookieStore.toString(),
     },
   });
 
@@ -73,14 +64,14 @@ export const fetchSingleNoteById = async (id: string): Promise<Note> => {
 
   const response = await api.get<Note>(`/notes/${id}`, {
     headers: {
-      cookie: cookieStore.toString(),
+      Cookie: cookieStore.toString(),
     },
   });
 
   return response.data;
 };
 
-export async function fetchTags() {
+export async function fetchTags(): Promise<string[]> {
   const { notes }: FetchNotesResponse = await fetchNotes();
 
   if (notes.length === 0) return [];
