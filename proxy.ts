@@ -22,10 +22,7 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(new URL("/sign-in", request.url));
       }
 
-      const response = isPublicRoute
-        ? NextResponse.redirect(new URL("/", request.url))
-        : NextResponse.next();
-
+      const response = NextResponse.next();
       const setCookie = data.headers["set-cookie"];
 
       if (setCookie) {
@@ -66,10 +63,6 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL("/sign-in", request.url));
     }
   }
-
-    if (accessToken && isPublicRoute) {
-  return NextResponse.redirect(new URL("/profile", request.url));
-  }  
 
   return NextResponse.next();
 }
