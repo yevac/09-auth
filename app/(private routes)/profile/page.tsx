@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -35,15 +34,6 @@ export default async function Profile() {
         <h1 className={css.formTitle}>My Profile</h1>
 
         <div className={css.profileInfo}>
-          <div className={css.avatar}>
-            <Image
-              src={user.avatar || "/user-default-photo.webp"}
-              width={300}
-              height={300}
-              alt="Avatar"
-            />
-          </div>
-
           <h2>Name: {user.username}</h2>
           <h2>Email: {user.email}</h2>
 
