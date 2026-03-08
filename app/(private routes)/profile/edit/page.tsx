@@ -83,7 +83,7 @@ export default function EditProfile() {
 
       <form className={css.form} action={handleSubmit}>
         <div className={css.formGroup}>
-          <label htmlFor="avatar">Avatar</label>
+          <label>Avatar</label>
           <div className={css.avatarWrapper}>
             <Image
               src={avatar || "/user-defaul-photo.webp"}
@@ -101,9 +101,7 @@ export default function EditProfile() {
             id="username"
             name="username"
             value={username}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setUsername(e.target.value)
-            }
+            onChange={(e) => setUsername(e.target.value)}
             className={css.input}
             required
           />
