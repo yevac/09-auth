@@ -15,15 +15,19 @@ export const getServerMe = async (): Promise<User> => {
 };
 
 export const checkServerSession = async () => {
+  try {
+    const cookieStore = await cookies();
 
-  const cookieStore = await cookies();
-  const response = await nextServer.get("/auth/session", {
-    headers: {
+    const { data } = await nextServer.get("/users/me", {
+      headers: {
+        cookie: cookieStore.toString(),
+      },
+    });
 
-      cookie: cookieStore.toString(),
-    },
-  });
-  return response;
+    return data;
+  } catch {
+    return null;
+  }
 };
 
 export async function fetchNotes(

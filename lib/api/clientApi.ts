@@ -53,8 +53,12 @@ export const login = async (payload: LoginRequest) => {
 };
 
 export const checkSession = async () => {
-  const response = await nextServer.get<CheckSessionRequest>("/auth/session");
-  return response.data;
+  try {
+    const response = await nextServer.get<User>("/users/me");
+    return response.data;
+  } catch {
+    return null;
+  }
 };
 
 export const getMe = async () => {
