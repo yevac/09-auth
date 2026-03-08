@@ -1,9 +1,8 @@
 import { cookies } from "next/headers";
 import type { AxiosResponse } from "axios";
-
-import { api } from "./api";
 import type { User } from "@/types/user";
 import type { Note, FetchNotesResponse } from "@/types/note";
+import { api } from "./api";
 
 export const getServerMe = async (): Promise<User | null> => {
   try {
@@ -75,15 +74,12 @@ export const fetchSingleNoteById = async (id: string): Promise<Note> => {
 export async function fetchTags(): Promise<string[]> {
   const { notes }: FetchNotesResponse = await fetchNotes();
 
-  if (notes.length === 0) {
-    return [];
-  }
+  if (notes.length === 0) return [];
 
   const tags = notes.reduce<string[]>((accu, note) => {
     if (!accu.includes(note.tag)) {
       accu.push(note.tag);
     }
-
     return accu;
   }, []);
 
