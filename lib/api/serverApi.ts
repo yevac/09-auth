@@ -4,14 +4,20 @@ import type { User } from "@/types/user";
 import type { Note, FetchNotesResponse } from "@/types/note";
 import { api } from "./api";
 
-export const getServerMe = async (): Promise<User> => {
-  const cookieStore = await cookies();
-  const { data } = await api.get("/users/me", {
-    headers: {
-      Cookie: cookieStore.toString(),
-    },
-  });
-  return data;
+export const getServerMe = async (): Promise<User | null> => {
+  try {
+    const cookieStore = await cookies();
+
+    const response = await api.get<User>("/auth/session", {
+      headers: {
+        Cookie: cookieStore.toString(),
+      },
+    });
+
+    return response.data;
+  } catch {
+    return null;
+  }
 };
 
 export const checkServerSession = async (): Promise<AxiosResponse<User> | null> => {
