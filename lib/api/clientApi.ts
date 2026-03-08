@@ -1,14 +1,14 @@
 import { nextServer } from "./api";
 import type { Note, CreateNotePayload, FetchNotesResponse } from "@/types/note";
-import {
+import type {
   LoginRequest,
   RegisterRequest,
   UpdateUserRequest,
 } from "@/types/auth";
-import { User } from "@/types/user";
+import type { User } from "@/types/user";
 
 export async function fetchSingleNoteById(id: string) {
-  const response = await nextServer.get<Note>(`/notes/${id}`, {});
+  const response = await nextServer.get<Note>(`/notes/${id}`);
   return response.data;
 }
 
@@ -37,7 +37,6 @@ export async function createNote(payload: CreateNotePayload): Promise<Note> {
 
 export async function deleteNote(noteId: Note["id"]) {
   const response = await nextServer.delete<Note>(`/notes/${noteId}`);
-
   return response.data;
 }
 
@@ -51,20 +50,6 @@ export const login = async (payload: LoginRequest) => {
   return response.data;
 };
 
-export const checkSession = async () => {
-  try {
-    const response = await nextServer.get("/auth/session");
-    return response.data;
-  } catch {
-    return null;
-  }
-};
-
-export const getMe = async () => {
-  const response = await nextServer.get<User>("/users/me");
-  return response.data;
-};
-
 export const logout = async (): Promise<void> => {
   await nextServer.post("/auth/logout");
 };
@@ -72,4 +57,38 @@ export const logout = async (): Promise<void> => {
 export const updateMe = async (payload: UpdateUserRequest) => {
   const { data } = await nextServer.patch<User>("/users/me", payload);
   return data;
+};
+
+export const getMe = async () => {
+  try {
+    const response = await fetch("/api/auth/session", {
+      credentials: "include",
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as User;
+  } catch {
+    return null;
+  }
+};
+
+export const checkSession = async () => {
+  try {
+    const response = await fetch("/api/auth/session", {
+      credentials: "include",
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as User;
+  } catch {
+    return null;
+  }
 };
