@@ -94,7 +94,7 @@ export const updateMe = async (payload: UpdateUserRequest) => {
   return data;
 };
 
-export const getMe = async () => {
+export const getMe = async (): Promise<User | null> => {
   try {
     const response = await fetch("/api/auth/session", {
       credentials: "include",
@@ -111,19 +111,7 @@ export const getMe = async () => {
   }
 };
 
-export const checkSession = async () => {
-  try {
-    const response = await fetch("/api/auth/session", {
-      credentials: "include",
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    return (await response.json()) as User;
-  } catch {
-    return null;
-  }
+export const checkSession = async (): Promise<boolean> => {
+  const user = await getMe();
+  return Boolean(user);
 };
