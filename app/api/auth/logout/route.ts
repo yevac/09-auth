@@ -11,7 +11,7 @@ export async function POST() {
     const accessToken = cookieStore.get("accessToken")?.value;
     const refreshToken = cookieStore.get("refreshToken")?.value;
 
-    await api.post("auth/logout", null, {
+    await api.post("/auth/logout", null, {
       headers: {
         Cookie: `accessToken=${accessToken}; refreshToken=${refreshToken}`,
       },
@@ -29,7 +29,7 @@ export async function POST() {
       logErrorResponse(error.response?.data);
       return NextResponse.json(
         { error: error.message, response: error.response?.data },
-        { status: error.status },
+        { status: error.response?.status ?? 500 },
       );
     }
     logErrorResponse({ message: (error as Error).message });
