@@ -4,20 +4,13 @@ import type { User } from "@/types/user";
 import type { Note, FetchNotesResponse } from "@/types/note";
 import { api } from "./api";
 
-async function getCookieHeader(): Promise<string> {
-  const cookieStore = await cookies();
-
-  return cookieStore
-    .getAll()
-    .map(({ name, value }) => `${name}=${value}`)
-    .join("; ");
-}
-
 export const getServerMe = async (): Promise<User | null> => {
   try {
+    const cookieStore = await cookies();
+
     const response = await api.get<User>("/auth/session", {
       headers: {
-        Cookie: await getCookieHeader(),
+        Сookie: cookieStore.toString(),
       },
     });
 
@@ -29,9 +22,11 @@ export const getServerMe = async (): Promise<User | null> => {
 
 export const checkServerSession = async (): Promise<AxiosResponse<User> | null> => {
   try {
+    const cookieStore = await cookies();
+
     const response = await api.get<User>("/auth/session", {
       headers: {
-        Cookie: await getCookieHeader(),
+        Cookie: cookieStore.toString(),
       },
     });
 
@@ -46,6 +41,8 @@ export async function fetchNotes(
   searchQuery?: string,
   tag?: string,
 ): Promise<FetchNotesResponse> {
+  const cookieStore = await cookies();
+
   const response = await api.get<FetchNotesResponse>("/notes", {
     params: {
       page,
@@ -55,7 +52,7 @@ export async function fetchNotes(
       tag,
     },
     headers: {
-      Cookie: await getCookieHeader(),
+      Cookie: cookieStore.toString(),
     },
   });
 
@@ -63,9 +60,11 @@ export async function fetchNotes(
 }
 
 export const fetchSingleNoteById = async (id: string): Promise<Note> => {
+  const cookieStore = await cookies();
+
   const response = await api.get<Note>(`/notes/${id}`, {
     headers: {
-      Cookie: await getCookieHeader(),
+      Cookie: cookieStore.toString(),
     },
   });
 
@@ -73,14 +72,16 @@ export const fetchSingleNoteById = async (id: string): Promise<Note> => {
 };
 
 export async function fetchTags(): Promise<string[]> {
-  const { notes } = await fetchNotes();
+  const { notes }: FetchNotesResponse = await fetchNotes();
 
   if (notes.length === 0) return [];
 
-  return notes.reduce<string[]>((accu, note) => {
+  const tags = notes.reduce<string[]>((accu, note) => {
     if (!accu.includes(note.tag)) {
       accu.push(note.tag);
     }
     return accu;
   }, []);
+
+  return tags;
 }
