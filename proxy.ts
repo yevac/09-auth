@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 const privateRoutes = ["/notes"];
@@ -88,7 +89,7 @@ function clearAuthCookies(response: NextResponse): void {
   });
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const privateRoute = isPrivateRoute(pathname);
@@ -98,8 +99,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
-  const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
+  const cookieStore = await cookies();
+
+  const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
+  const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)?.value;
 
   if (accessToken) {
     if (publicRoute) {
